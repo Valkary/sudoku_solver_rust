@@ -58,7 +58,6 @@ fn solve_board(mut board: [[u8; 9]; 9], stack: &mut Vec<(usize, usize)>, startin
     if empty_pos.0 == 10 && empty_pos.1 == 10 {
         return println!("\nBoard solved! :D");
     } else {
-
         for i in starting_num..10 as u8 {
             // Check for current num validity in our board
             if verify_num_in_cell(i.try_into().unwrap(), empty_pos.0, empty_pos.1, board) {
@@ -79,32 +78,23 @@ fn solve_board(mut board: [[u8; 9]; 9], stack: &mut Vec<(usize, usize)>, startin
          */
         if board[empty_pos.1][empty_pos.0] == 0 {
             // Get the last and second last elements of the stack
-            let last_pos = stack[stack.len() - 1];
-            let second_last_pos = stack[stack.len() - 2];
+            let last_pos = stack.pop().unwrap();
 
             // Destructure the rows and cols from the positions
-            let last_col = last_pos.1;
-            let last_row = last_pos.0;
-            let second_last_col = second_last_pos.1;
-            let second_last_row = second_last_pos.0;
+            let (last_row, last_col) = last_pos;
 
+            // Calculate the starting number for the next iteration
+            let last_val = board[last_row][last_col];
+            let new_val = if (last_val + 1) > 9 { 1 } else { last_val + 1 };
+            
             // Clear their values from the board by setting them to 0
             board[last_row][last_col] = 0;
-            board[second_last_row][second_last_col] = 0;
-            
-            // Calculate the starting number for the next iteration
-            let mut last_val = board[last_row][last_col] + 1;
-            last_val = if last_val > 9 { 1 } else { last_val };
 
             println!("\n=========BACKTRACKING==========");
             display_board(board);
            
-            // Pop the last 2 elements from the stack
-            stack.pop();
-            stack.pop();
-
             // Try to solve the board with new values
-            solve_board(board, stack, last_val);
+            solve_board(board, stack, new_val);
         }
     }
 }
