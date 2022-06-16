@@ -42,64 +42,62 @@ const BOARD: [[i32; 9]; 9] = [
 */
 
 fn main() {
-    let new_board: [[u8; 9]; 9] = BOARD;
+    let mut new_board = BOARD;
 	println!("Welcome to the sudoku solver!");
 	println!("========STARTING BOARD===========");
-	display_board(BOARD);
+	display_board(&new_board);
 
-    let positions_stack: &mut Vec<(usize, usize)> = &mut Vec::new();	
-    solve_board(new_board, positions_stack, 1);
+    // let positions_stack: &mut Vec<(usize, usize)> = &mut Vec::new();	
+    solve_board(&mut new_board);
 }
 
-fn solve_board(mut board: [[u8; 9]; 9], stack: &mut Vec<(usize, usize)>, starting_num: u8) {
-	let empty_pos: (usize, usize) = find_empty_pos(board);
-
-    // Checamos que haya una posicion libre
-    if empty_pos.0 == 10 && empty_pos.1 == 10 {
-        return println!("\nBoard solved! :D");
-    } else {
-        for i in starting_num..10 as u8 {
-            // Check for current num validity in our board
-            if verify_num_in_cell(i.try_into().unwrap(), empty_pos.0, empty_pos.1, board) {
-
+fn solve_board(board: &mut [[u8; 9]; 9]) {
+    let mut positions_that_have_been_set = Vec::new();
+    
+    'main_while: while let Some(empty_pos) = find_empty_pos(board) {
+        // search through numbers to see if any are valid
+        for i in 1..10 {
+            // Check for num validity in our board
+            if verify_num_in_cell(i, empty_pos.0, empty_pos.1, board) {
                 // Push latest position to the stack and place it on the board
-                stack.push((empty_pos.1, empty_pos.0));
-                board[empty_pos.1][empty_pos.0] = i as u8;
+                positions_that_have_been_set.push(empty_pos);
+                board[empty_pos.1][empty_pos.0] = i;
 
-                // Show the board and recurse
+                // Show the board and continue with while loop
                 display_board(board);
-                solve_board(board, stack, 1);
+                continue 'main_while;
             }
         }
 
-        /*
-         * [BACKTRACKING]
-         * No valid number was found
-         */
-        if board[empty_pos.1][empty_pos.0] == 0 {
-            // Get the last and second last elements of the stack
-            let last_pos = stack.pop().unwrap();
+        println!("\n=========BACKTRACKING==========");
 
-            // Destructure the rows and cols from the positions
-            let (last_row, last_col) = last_pos;
+        // no valid number was found :(
+        // back track by incrementing each, removing them if we wrap past 9
+        'backtrack: loop {
+            let last_position_set = positions_that_have_been_set.last().unwrap();
+            // find a new value for the last cell
+            for i in (board[last_position_set.1][last_position_set.0]+1)..=9 {
+                // Check for num validity in our board
+                if verify_num_in_cell(i, last_position_set.0, last_position_set.1, board) {
+                    // set to next valid number
+                    board[last_position_set.1][last_position_set.0] = i;
 
-            // Calculate the starting number for the next iteration
-            let last_val = board[last_row][last_col];
-            let new_val = if (last_val + 1) > 9 { 1 } else { last_val + 1 };
-            
-            // Clear their values from the board by setting them to 0
-            board[last_row][last_col] = 0;
+                    // Show the board and continue with while loop
+                    display_board(board);
+                    break 'backtrack;
+                }
+            }
 
-            println!("\n=========BACKTRACKING==========");
-            display_board(board);
-           
-            // Try to solve the board with new values
-            solve_board(board, stack, new_val);
+            // we cant increase the cell so back track farther
+            board[last_position_set.1][last_position_set.0] = 0;
+            positions_that_have_been_set.pop();
         }
     }
+
+    println!("\nBoard solved! :D");
 }
 
-fn display_board(board: [[u8; 9]; 9]) {
+fn display_board(board: &[[u8; 9]; 9]) {
     let mid_part = "-".repeat(9);
     let bar = format!("+{}+{}+{}+", mid_part, mid_part, mid_part);
 
@@ -133,21 +131,20 @@ fn display_board(board: [[u8; 9]; 9]) {
 	}
 }
 
-fn find_empty_pos(board: [[u8; 9]; 9]) -> (usize, usize) {
-	/*
-	 * i represents the row
-	 * j represents the col
-	 */
-	for i in 0..board.len() {
-		for j in 0..board[i].len() {
-			if board[i][j] == 0 {
-				// Empty position found
-				return (j, i);
-			}
-		}
-	}
-	// Empty position not found
-	return (10, 10);
+fn find_empty_pos(board: &[[u8; 9]; 9]) -> Option<(usize, usize)> {
+    /*
+     * i represents the row
+     * j represents the col
+     */
+    for (i, row) in board.iter().enumerate() {
+        for (j, column) in row.iter().enumerate() {
+            if *column == 0 {
+                // Empty position found
+                return Some((j, i));
+            }
+        }
+    }
+    None
 }
 
 fn check_num_in_row(num: u8, row: [u8; 9]) -> bool {
@@ -160,7 +157,7 @@ fn check_num_in_row(num: u8, row: [u8; 9]) -> bool {
 	return true;
 }
 
-fn check_num_in_col(num: u8, board: [[u8; 9]; 9], col: usize) -> bool {
+fn check_num_in_col(num: u8, board: &[[u8; 9]; 9], col: usize) -> bool {
 	for i in 0..board.len() {
 		if num == board[i][col] {
 			return false;
@@ -170,7 +167,7 @@ fn check_num_in_col(num: u8, board: [[u8; 9]; 9], col: usize) -> bool {
 	return true;
 }
 
-fn check_num_in_box(num: u8, board: [[u8; 9]; 9], col: usize, row: usize) -> bool {
+fn check_num_in_box(num: u8, board: &[[u8; 9]; 9], col: usize, row: usize) -> bool {
 	let box_x: usize = (col as f32 / 3.0).floor() as usize;
 	let box_y: usize = (row as f32 / 3.0).floor() as usize;
 
@@ -185,7 +182,7 @@ fn check_num_in_box(num: u8, board: [[u8; 9]; 9], col: usize, row: usize) -> boo
 	return true;
 }
 
-fn verify_num_in_cell(num: u8, col: usize, row: usize, board: [[u8; 9]; 9]) -> bool {
+fn verify_num_in_cell(num: u8, col: usize, row: usize, board: &[[u8; 9]; 9]) -> bool {
     if !check_num_in_row(num, board[row])
 		|| !check_num_in_col(num, board, col)
 		|| !check_num_in_box(num, board, col, row)
