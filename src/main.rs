@@ -15,7 +15,7 @@ const BOARD: [[i32; 9]; 9] = [
 ];
 */
 
-const BOARD: [[i32; 9]; 9] = [
+const BOARD: [[u8; 9]; 9] = [
     [0,9,0,8,6,5,2,0,0],
     [0,0,5,0,1,2,0,6,8],
     [0,0,0,0,0,0,0,4,0],
@@ -42,7 +42,7 @@ const BOARD: [[i32; 9]; 9] = [
 */
 
 fn main() {
-    let new_board: [[i32; 9]; 9] = BOARD;
+    let new_board: [[u8; 9]; 9] = BOARD;
 	println!("Welcome to the sudoku solver!");
 	println!("========STARTING BOARD===========");
 	display_board(BOARD);
@@ -51,7 +51,7 @@ fn main() {
     solve_board(new_board, positions_stack, 1);
 }
 
-fn solve_board(mut board: [[i32; 9]; 9], stack: &mut Vec<(usize, usize)>, starting_num: i32) {
+fn solve_board(mut board: [[u8; 9]; 9], stack: &mut Vec<(usize, usize)>, starting_num: u8) {
 	let empty_pos: (usize, usize) = find_empty_pos(board);
 
     // Checamos que haya una posicion libre
@@ -59,13 +59,13 @@ fn solve_board(mut board: [[i32; 9]; 9], stack: &mut Vec<(usize, usize)>, starti
         return println!("\nBoard solved! :D");
     } else {
 
-        for i in starting_num..10 as i32 {
+        for i in starting_num..10 as u8 {
             // Check for current num validity in our board
             if verify_num_in_cell(i.try_into().unwrap(), empty_pos.0, empty_pos.1, board) {
 
                 // Push latest position to the stack and place it on the board
                 stack.push((empty_pos.1, empty_pos.0));
-                board[empty_pos.1][empty_pos.0] = i as i32;
+                board[empty_pos.1][empty_pos.0] = i as u8;
 
                 // Show the board and recurse
                 display_board(board);
@@ -109,7 +109,7 @@ fn solve_board(mut board: [[i32; 9]; 9], stack: &mut Vec<(usize, usize)>, starti
     }
 }
 
-fn display_board(board: [[i32; 9]; 9]) {
+fn display_board(board: [[u8; 9]; 9]) {
     let mid_part = "-".repeat(9);
     let bar = format!("+{}+{}+{}+", mid_part, mid_part, mid_part);
 
@@ -143,7 +143,7 @@ fn display_board(board: [[i32; 9]; 9]) {
 	}
 }
 
-fn find_empty_pos(board: [[i32; 9]; 9]) -> (usize, usize) {
+fn find_empty_pos(board: [[u8; 9]; 9]) -> (usize, usize) {
 	/*
 	 * i represents the row
 	 * j represents the col
@@ -160,7 +160,7 @@ fn find_empty_pos(board: [[i32; 9]; 9]) -> (usize, usize) {
 	return (10, 10);
 }
 
-fn check_num_in_row(num: i32, row: [i32; 9]) -> bool {
+fn check_num_in_row(num: u8, row: [u8; 9]) -> bool {
 	for i in 0..row.len() {
 		if row[i] == num {
 			return false;
@@ -170,7 +170,7 @@ fn check_num_in_row(num: i32, row: [i32; 9]) -> bool {
 	return true;
 }
 
-fn check_num_in_col(num: i32, board: [[i32; 9]; 9], col: usize) -> bool {
+fn check_num_in_col(num: u8, board: [[u8; 9]; 9], col: usize) -> bool {
 	for i in 0..board.len() {
 		if num == board[i][col] {
 			return false;
@@ -180,7 +180,7 @@ fn check_num_in_col(num: i32, board: [[i32; 9]; 9], col: usize) -> bool {
 	return true;
 }
 
-fn check_num_in_box(num: i32, board: [[i32; 9]; 9], col: usize, row: usize) -> bool {
+fn check_num_in_box(num: u8, board: [[u8; 9]; 9], col: usize, row: usize) -> bool {
 	let box_x: usize = (col as f32 / 3.0).floor() as usize;
 	let box_y: usize = (row as f32 / 3.0).floor() as usize;
 
@@ -195,7 +195,7 @@ fn check_num_in_box(num: i32, board: [[i32; 9]; 9], col: usize, row: usize) -> b
 	return true;
 }
 
-fn verify_num_in_cell(num: i32, col: usize, row: usize, board: [[i32; 9]; 9]) -> bool {
+fn verify_num_in_cell(num: u8, col: usize, row: usize, board: [[u8; 9]; 9]) -> bool {
     if !check_num_in_row(num, board[row])
 		|| !check_num_in_col(num, board, col)
 		|| !check_num_in_box(num, board, col, row)
